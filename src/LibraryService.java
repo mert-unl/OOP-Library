@@ -2,6 +2,7 @@ import enums.Category;
 import enums.Status;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LibraryService {
     private final Library library;
@@ -152,7 +153,7 @@ public class LibraryService {
                 }
 
                 int selected = input.nextInt();
-                input.nextLine(); // buffer temizliği
+                input.nextLine();
 
                 if (selected > 0 && selected <= categories.length) {
                     Category selectedCategory = categories[selected - 1];
@@ -293,7 +294,7 @@ public class LibraryService {
         System.out.println("✅ Kitap başarıyla güncellendi.");
     }
 
-    public void kitapSec() {
+    public void kitapSec(Member uye) {
         System.out.println("Hangi değere göre kitap seçmek istiyorsunuz?");
         System.out.println("1- ID'ye göre kitap seç.");
         System.out.println("2- İsme göre kitap seç.");
@@ -301,74 +302,196 @@ public class LibraryService {
         int secenek = input.nextInt();
         input.nextLine();
 
-        if (secenek == 1) {
-            System.out.print("Kitap ID giriniz: ");
-            int id = input.nextInt();
-            input.nextLine();
+        Book secilenKitap = null;
 
-            boolean bulundu = false;
-            for (Book b : library.getBookList()) {
-                if (b.getBookId() == id) {
-                    System.out.println(b);
-                    bulundu = true;
-                    break;
-                }
-            }
-            if (!bulundu) System.out.println("Bu ID'ye sahip kitap bulunamadı.");
-        } else if (secenek == 2) {
-            System.out.print("Kitap adını giriniz: ");
-            String isim = input.nextLine();
-
-            boolean bulundu = false;
-            for (Book b : library.getBookList()) {
-                if (b.getBookName().equalsIgnoreCase(isim)) {
-                    System.out.println(b);
-                    bulundu = true;
-                }
-            }
-            if (!bulundu) System.out.println("Bu isme sahip kitap bulunamadı.");
-        } else if (secenek == 3) {
-            System.out.println("Yazarlar:");
-            List<Author> yazarListesi = library.getAuthorList();
-            for (int i = 0; i < yazarListesi.size(); i++) {
-                System.out.println((i + 1) + "- " + yazarListesi.get(i).getName());
-            }
-
-            System.out.print("Yazarı seçiniz: ");
-            int yazarSecim = input.nextInt();
-            input.nextLine();
-
-            if (yazarSecim < 1 || yazarSecim > yazarListesi.size()) {
-                System.out.println("Geçersiz seçim.");
-            } else {
-                Author secilenYazar = yazarListesi.get(yazarSecim - 1);
-                List<Book> yazarKitaplari = new ArrayList<>();
-
+        switch (secenek) {
+            case 1:
+                System.out.print("Kitap ID giriniz: ");
+                int id = input.nextInt();
+                input.nextLine();
                 for (Book b : library.getBookList()) {
-                    if (b.getAuthor().equals(secilenYazar)) {
-                        yazarKitaplari.add(b);
+                    if (b.getBookId() == id) {
+                        secilenKitap = b;
+                        break;
                     }
                 }
+                break;
 
-                if (yazarKitaplari.isEmpty()) {
-                    System.out.println("Bu yazara ait kitap bulunamadı.");
-                } else {
-                    System.out.println("\n" + secilenYazar.getName() + " adlı yazara ait kitaplar:");
-                    for (int i = 0; i < yazarKitaplari.size(); i++) {
-                        System.out.println((i + 1) + "- " + yazarKitaplari.get(i).getBookName());
+            case 2:
+                System.out.print("Kitap adını giriniz: ");
+                String isim = input.nextLine();
+                for (Book b : library.getBookList()) {
+                    if (b.getBookName().equalsIgnoreCase(isim)) {
+                        secilenKitap = b;
+                        break;
                     }
+                }
+                break;
 
-                    System.out.print("Bir kitap seçiniz: ");
-                    int kitapSecim = input.nextInt();
-                    input.nextLine();
+            case 3:
+                List<Author> yazarListesi = library.getAuthorList();
+                for (int i = 0; i < yazarListesi.size(); i++) {
+                    System.out.println((i + 1) + "- " + yazarListesi.get(i).getName());
+                }
+                System.out.print("Yazarı seçiniz: ");
+                int yazarSecim = input.nextInt();
+                input.nextLine();
 
-                    if (kitapSecim < 1 || kitapSecim > yazarKitaplari.size()) {
-                        System.out.println("Geçersiz kitap seçimi.");
+                if (yazarSecim >= 1 && yazarSecim <= yazarListesi.size()) {
+                    Author secilenYazar = yazarListesi.get(yazarSecim - 1);
+                    List<Book> yazarKitaplari = library.getBookList().stream()
+                            .filter(b -> b.getAuthor().equals(secilenYazar))
+                            .collect(Collectors.toList());
+
+                    if (!yazarKitaplari.isEmpty()) {
+                        for (int i = 0; i < yazarKitaplari.size(); i++) {
+                            System.out.println((i + 1) + "- " + yazarKitaplari.get(i).getBookName());
+                        }
+                        System.out.print("Bir kitap seçiniz: ");
+                        int kitapSecim = input.nextInt();
+                        input.nextLine();
+
+                        if (kitapSecim >= 1 && kitapSecim <= yazarKitaplari.size()) {
+                            secilenKitap = yazarKitaplari.get(kitapSecim - 1);
+                        }
+                    }
+                }
+                break;
+
+            default:
+                System.out.println("Geçersiz seçim!");
+                return;
+        }
+
+        if (secilenKitap != null) {
+            System.out.println("\nSeçilen Kitap:");
+            System.out.println(secilenKitap);
+            kitapIslemMenusu(uye, secilenKitap);
+        } else {
+            System.out.println("Kitap bulunamadı.");
+        }
+    }
+
+    private void kitapIslemMenusu(Member uye, Book kitap) {
+        while (true) {
+            System.out.println("\nKitap İşlemleri:");
+            System.out.println("Ödünç alınan kitap sayısı:" + uye.getBorrowBooks().size());
+            System.out.println("Satın alınan kitap sayısı:" + uye.getPurchasedBooks().size());
+
+            System.out.println("1- Ödünç Al");
+            System.out.println("2- Satın Al");
+            System.out.println("3- Ödünç Alınan Kitapları Listele");
+            System.out.println("4- Satın Alınan Kitapları Litele");
+            System.out.println("5- Tüm Kitaplarını Listele");
+            System.out.println("6- Ana Menüye Dön");
+
+            int secim = input.nextInt();
+            input.nextLine();
+
+            switch (secim) {
+                case 1:
+                    if (kitap.getStatus() == Status.MEVCUT && uye.getCurrentBorrow() < uye.getMaxLimit()) {
+                        kitap.setStatus(Status.KİRALANDI);
+                        kitap.setOwnerMember(uye);
+                        uye.borrowBook(kitap);
+                        uye.increaseCurrentBorrow();
+                        System.out.println("Kitap ödünç alındı.");
                     } else {
-                        Book secilenKitap = yazarKitaplari.get(kitapSecim - 1);
-                        System.out.println("\nSeçilen Kitap Bilgisi:");
-                        System.out.println(secilenKitap);
+                        System.out.println("Kitap mevcut değil veya kitap limiti dolu.");
                     }
+                    break;
+
+                case 2:
+                    if (kitap.getStatus() == Status.MEVCUT) {
+                        kitap.setStatus(Status.SATILDI);
+                        kitap.setOwnerMember(uye);
+                        uye.getPurchasedBooks().add(kitap);
+                        System.out.println("Kitap satın alındı. Fatura oluşturuldu.");
+                    } else {
+                        System.out.println("Kitap mevcut değil.");
+                    }
+                    break;
+
+                case 3:
+                    uye.showBorrowedBooks();
+                case 4:
+                    uye.showPurchasedBooks();
+
+                case 5:
+                    uye.showAllBooks();
+                case 6:
+                    return;
+
+                default:
+                    System.out.println("Geçersiz seçim!");
+            }
+        }
+    }
+
+
+    public Member uyeEkle() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Üye adı: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Üye ID: ");
+        long id = 0;
+        while (true) {
+            try {
+                id = Long.parseLong(scanner.nextLine());
+                break;
+            } catch (NumberFormatException e) {
+                System.out.print("Geçersiz ID. Lütfen tekrar sayı girin: ");
+            }
+        }
+
+        System.out.print("Adres: ");
+        String adress = scanner.nextLine();
+
+        System.out.print("Telefon numarası: ");
+        String phoneNo = scanner.nextLine();
+
+        Member newMember = new Member(name, id, adress, phoneNo);
+
+        library.addMember(newMember);
+        System.out.println("\n✅ Üye başarıyla eklendi: " + name);
+        return newMember;
+    }
+
+
+    public void uyeleriGetir() {
+        for (Member member : library.getMemberList()) {
+            System.out.println(member.toString());
+        }
+    }
+
+    public void uyeSec(Member aktifUye) {
+        Set<Member> members = library.getMemberList();
+        if (members.isEmpty()) {
+            System.out.println("📭 Hiç üye yok. Yeni üye oluşturuluyor...");
+            aktifUye = uyeEkle();
+        } else {
+            System.out.println("\n📋 Kayıtlı Üyeler:");
+            for (Member member : members) {
+                System.out.println("ID: " + member.getId() + " - Ad: " + member.getName());
+            }
+
+            while (aktifUye == null) {
+                System.out.print("Lütfen giriş yapmak istediğiniz üyenin ID'sini girin: ");
+                try {
+                    long uyeId = Long.parseLong(input.nextLine());
+                    Optional<Member> secilen = members.stream()
+                            .filter(m -> m.getId() == uyeId)
+                            .findFirst();
+                    if (secilen.isPresent()) {
+                        aktifUye = secilen.get();
+                        System.out.println("✅ Giriş yapıldı: " + aktifUye.getName());
+                    } else {
+                        System.out.println("❌ Böyle bir ID bulunamadı. Tekrar deneyin.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("❌ Geçersiz sayı girdiniz!");
                 }
             }
         }

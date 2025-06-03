@@ -15,7 +15,15 @@ public class Book {
     private Status status;
     private int edition;
     private Date dateOfPurchase;
+ private Member ownerMember;
 
+    public void setOwnerMember(Member ownerMember) {
+        this.ownerMember = ownerMember;
+    }
+
+    public Member getOwnerMember() {
+        return ownerMember;
+    }
 
     @Override
     public String toString() {

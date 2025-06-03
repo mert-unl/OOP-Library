@@ -6,6 +6,19 @@ public class Library {
 
     private List<Author> authorList = new ArrayList<>();
     private List<Book> bookList = new ArrayList<>();
+    private Set<Member> memberList = new HashSet<>();
+
+    public void addMember(Member member) {
+        if (!memberList.contains(member)) {
+            memberList.add(member);
+        }
+    }
+
+    public Set<Member> getMemberList() {
+        return memberList;
+    }
+
+
 
     private Map<Category, List<Book>> categoryBookMap = new HashMap<>();
 
@@ -17,18 +30,6 @@ public class Library {
         return bookList;
     }
 
-    public void setAuthorList(List<Author> authorList) {
-        this.authorList = authorList;
-    }
-
-    public void setBookList(List<Book> bookList) {
-        this.bookList = bookList;
-        rebuildCategoryMap();
-    }
-
-    public void setCategoryBookMap(Map<Category, List<Book>> categoryBookMap) {
-        this.categoryBookMap = categoryBookMap;
-    }
 
     public void addAuthor(Author author) {
         if (!authorList.contains(author)) {
